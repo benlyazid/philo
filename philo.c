@@ -26,6 +26,7 @@ pthread_mutex_t	LOCK;
 
 
 typedef pthread_t p_t;
+typedef	pthread_mutex_t p_m_t;
 
 typedef struct	s_philo
 {
@@ -34,6 +35,7 @@ typedef struct	s_philo
 	int				status;
 	int				last_time_eating;
 	struct	s_philo	**tab;
+	p_m_t			**fork_loks;
 }				t_philo;
 
 int	get_time()
@@ -50,17 +52,19 @@ void	initial_tab(t_philo **tab, int n)
 {	
 	int	i;
 	t_philo	philo;
+	p_m_t	**forks;
 
+	forks = malloc(sizeof(p_m_t *) * n);
 	i = -1;
 	while (++i < n)
 	{
 		philo.id = i + 1;
-		if ((i + 1) % 2 && i != N_PHILO - 1)
-			philo.status = EATING;
-		else
-			philo.status = THNKING;
+		philo.status = -1;
 		philo.t_id = malloc(sizeof(p_t));
+		forks[i] = malloc(sizeof(p_m_t));
+		pthread_mutex_init(forks[i], NULL);
 		philo.tab = tab;
+		philo.fork_loks = forks;
 		philo.last_time_eating = 0;
 		tab[0][i] = philo;
 	}
@@ -94,6 +98,10 @@ void	*update_status(void *element)
 	struct timeval tv;
 
 	while (ALL_HAS_CRIETED != 1);
+	for (size_t i = 0; i < N_PHILO; i++)
+	{
+		printf("%d	%p \n", philo->id, philo->fork_loks[i]);
+	}
 	gettimeofday(&tv, NULL);
 	if (philo->status == THNKING)
 		printf(BLU "%d %d is THNKING \n" RESET, get_time(), philo->id);
@@ -161,6 +169,7 @@ void	run_philos(t_philo **tab, int n)
 	ALL_HAS_CRIETED = 1;
 
 }
+
 int main(int argc, char const *argv[])
 {
 	t_philo	*tab;
