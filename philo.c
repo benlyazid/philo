@@ -3,11 +3,12 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
-
+#include "./philo.h"
 int	N_PHILO = 3;
-int	T_DIE = 400 * 1000;
-int	T_EAT = 400 * 1000;
-int	T_SLEEP = 400 * 1000;
+int T_ERR = 1;
+int	T_DIE = (400) * 1000;
+int	T_EAT = (400) * 1000;
+int	T_SLEEP = (400) * 1000;
 int	N_SIMULATION = 10;
 long START, M_START;
 int ALL_HAS_CRIETED;
@@ -19,24 +20,12 @@ int ALL_HAS_CRIETED;
 #define CYN   "\x1B[36m"
 #define WHT   "\x1B[37m"
 #define RESET "\x1B[0m"
-pthread_mutex_t	LOCK;
 # define EATING 1
 # define THNKING 2
 # define SLEEPING 3
 
 
-typedef pthread_t p_t;
-typedef	pthread_mutex_t p_m_t;
 
-typedef struct	s_philo
-{
-	int				id;
-	p_t				*t_id;
-	int				status;
-	int				last_time_eating;
-	struct	s_philo	**tab;
-	p_m_t			**fork_loks;
-}				t_philo;
 
 int	get_time()
 {
@@ -53,8 +42,13 @@ void	initial_tab(t_philo **tab, int n)
 	int	i;
 	t_philo	philo;
 	p_m_t	**forks;
+	p_m_t	*write_locks;
+
 
 	forks = malloc(sizeof(p_m_t *) * n);
+	write_locks = malloc(sizeof(p_m_t));
+	pthread_mutex_init(write_locks, NULL);
+
 	i = -1;
 	while (++i < n)
 	{
@@ -66,86 +60,79 @@ void	initial_tab(t_philo **tab, int n)
 		philo.tab = tab;
 		philo.fork_loks = forks;
 		philo.last_time_eating = 0;
+		philo.simulation = 0;
+		philo.write_lock = write_locks;
 		tab[0][i] = philo;
 	}
 }
 
-int		can_start_eating(t_philo **tab, int index)
+int		take_fork(t_philo **tab, int index)
 {
 	int	before;
 	int	next;
 	int	res;
 
 	res = 0;
-	pthread_mutex_lock(&LOCK);
 	if (index == 0)
 		before = N_PHILO - 1;
 	else
 		before = index - 1;
-	if (index == N_PHILO - 1)
-		next = 0;
+	next = index;
+	pthread_mutex_lock(tab[0][index].fork_loks[before]);
+	ft_put_status(get_time(),index + 1, "has taken a fork", CYN, tab[0]->write_lock);
+	
+	pthread_mutex_lock(tab[0][index].fork_loks[next]);
+	ft_put_status(get_time(),index + 1, "has taken a fork", CYN, tab[0]->write_lock);
+	return (res);
+}
+
+int		drope_fork(t_philo **tab, int index)
+{
+	int	before;
+	int	next;
+	int	res;
+
+	res = 0;
+	if (index == 0)
+		before = N_PHILO - 1;
 	else
-		next = index++;
-	if (tab[0][before].status != EATING && tab[0][next].status != EATING)
-		res = 1;
-	pthread_mutex_unlock(&LOCK);
+		before = index - 1;
+	next = index;
+	pthread_mutex_unlock(tab[0][index].fork_loks[before]);
+	pthread_mutex_unlock(tab[0][index].fork_loks[next]);
 	return (res);
 }
 
 void	*update_status(void *element)
 {
-	t_philo *philo = (t_philo *)element;
-	struct timeval tv;
-
-	while (ALL_HAS_CRIETED != 1);
-	for (size_t i = 0; i < N_PHILO; i++)
-	{
-		printf("%d	%p \n", philo->id, philo->fork_loks[i]);
-	}
-	gettimeofday(&tv, NULL);
-	if (philo->status == THNKING)
-		printf(BLU "%d %d is THNKING \n" RESET, get_time(), philo->id);
-
-	if (philo->status == SLEEPING)
-		printf(MAG "%d %d is SLEEPING \n" RESET, get_time(), philo->id);
-
-	int	alredy_thinking = philo->status == THNKING ? 1 : 0;
-	while (1)
+	t_philo	*philo = (t_philo *)element;
+	if (philo->id % 2)
+		usleep(1000);
+	while (philo->simulation < 3)
 	{
 		if (philo->status == EATING)
 		{	
-			if (get_time() - philo->last_time_eating > T_DIE / 1000)
-				printf(RED "%d %d is DIED \n" RESET, get_time(), philo->id);
-			else
-				printf(GRN "%d %d is EATING \n" RESET, get_time(), philo->id);
-			usleep(T_EAT);
-			pthread_mutex_lock(&LOCK);
+			ft_put_status(get_time(), philo->id, "is sleeping", MAG, philo->write_lock);
 			philo->status = SLEEPING;
-			pthread_mutex_unlock(&LOCK);
+			usleep(T_SLEEP);
+
 		}
 		if (philo->status == SLEEPING)
 		{	
-			printf(MAG "%d %d is SLEEPING \n" RESET, get_time(), philo->id);
-			usleep(T_SLEEP);
-			pthread_mutex_lock(&LOCK);
+			ft_put_status(get_time(), philo->id, "is thinking", BLU, philo->write_lock);
 			philo->status = THNKING;
-			pthread_mutex_unlock(&LOCK);
 		}
-		if (philo->status == THNKING)
-		{	
-			if (alredy_thinking == 0)
-				printf(BLU "%d %d is THINKING \n" RESET, get_time(), philo->id);
-			if (can_start_eating(philo->tab, philo->id - 1))
-			{
-				alredy_thinking = 0;
-				pthread_mutex_lock(&LOCK);
-				philo->status = EATING;
-				pthread_mutex_unlock(&LOCK);
-			}
-			else
-			alredy_thinking = 1;
+		if (philo->status == THNKING || philo->status == -1)
+		{
+			take_fork(philo->tab, philo->id - 1);
+			ft_put_status(get_time(), philo->id, "is eating", GRN, philo->write_lock);
+			philo->status = EATING;
+			usleep(T_EAT);
+			drope_fork(philo->tab, philo->id - 1);
+			philo->simulation++;
 		}
 	}
+	//exit(1);
 	
 	return (NULL);
 }
@@ -154,7 +141,6 @@ void	run_philos(t_philo **tab, int n)
 {
 	int	i;
 	t_philo	philo;
-
 	
 	i = -1;
 	while (n > ++i)
@@ -166,7 +152,6 @@ void	run_philos(t_philo **tab, int n)
 	gettimeofday(&tv, NULL);	
 	START = tv.tv_sec;
 	M_START = tv.tv_usec;
-	ALL_HAS_CRIETED = 1;
 
 }
 
@@ -176,23 +161,11 @@ int main(int argc, char const *argv[])
 
 	tab = malloc(sizeof(t_philo) * (N_PHILO + 1));
 	initial_tab(&tab, N_PHILO);
-	pthread_mutex_init(&LOCK, NULL);
 	ALL_HAS_CRIETED = 0;
 	run_philos(&tab, N_PHILO);
 
 	while (1)
 	{
-	/*	for (size_t i = 0; i < N_PHILO; i++)
-		{	
-			if (tab[i].status == EATING)
-				printf(GRN "from %d status is EATING \n" RESET, tab[i].id);
-			else if (tab[i].status == THNKING)
-				printf(BLU "from %d status is THINKING \n" RESET, tab[i].id);
-			else if (tab[i].status == SLEEPING)
-				printf(RED "from %d status is SLEEPING \n" RESET, tab[i].id);
-		}
-		printf("---------------------------------\n");*/
-		
 	}
     return 0;
 

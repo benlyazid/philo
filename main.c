@@ -3,14 +3,34 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 typedef long long ll;
 pthread_mutex_t	lock;
 ll COUNTER;
 pthread_t tid0, tid1, tid2, tid3, tid4; 
 
+void	ft_put_nbr(int num)
+{
+	int		base;
+	char	c;
 
-int sold = 100;
+	base = 10;
+	while (num > base)
+	{
+		base *= 10;
+	}
+	base /= 10;
+	while (base)
+	{
+		c =  (num / base) + '0';
+		write(1, &c, 1);
+		num = num % base;
+		base /= 10;
+	}
+	write(1, "\n", 1);
+}
+
 void ft_putstr(char *s)
 {
 	int i = 0;
@@ -19,38 +39,9 @@ void ft_putstr(char *s)
 		write(1, &s[i], 1);
 		i++;
 	}
-
-}
-void *counting_2(void *v)
-{
-	for (ll i = 10000; i < 20000; i++)
-	{
-		pthread_mutex_lock(&lock);
-		COUNTER++;
-		pthread_mutex_unlock(&lock);
-	}
-
-	return (NULL);
 }
 
-void *counting_1(void *v)
-{
 
-	for (ll i = 0; i < 10000; i++)
-	{
-		pthread_mutex_lock(&lock);
-		COUNTER++;
-		pthread_mutex_unlock(&lock);
-	}
-	return (NULL);
-}
-
-void *print()
-{
-	while (COUNTER < 100000);
-	ft_putstr("abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ\n");
-	return 0;
-}
 
 void *check()
 {
@@ -66,25 +57,24 @@ void *check()
 int main()
 {
 	COUNTER = 0;
-	/*pthread_create(&tid0, NULL, counting, NULL);
-	pthread_create(&tid1, NULL, check, NULL);
-	pthread_join(tid0, NULL);
-	pthread_join(tid1, NULL);
-	// pthread_cancel(tid0);
-	// pthread_join(tid0, NULL);
-	// while(COUNTER  < 1147483647 / 2);
-	printf("counter is %llu\n", COUNTER);*/
-
-	pthread_mutex_init(&lock, NULL);
-
-	pthread_create(&tid1, NULL, counting_1, NULL);
-
-	pthread_create(&tid2, NULL, counting_2, NULL);
-	pthread_join(tid1, NULL);
-
-	pthread_join(tid2, NULL);
-
-	printf("COUNTER IS %llu\n", COUNTER);
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	int START = tv.tv_sec;
+	int M_START = tv.tv_usec;
+	int	time;
+	int i  = 1;
+	int error = 0;
+	while (i <= 10)
+	{
+		usleep((400) * 1000);
+		gettimeofday(&tv, NULL);
+		time = ((tv.tv_sec - START) * 1000) + ((tv.tv_usec - M_START) / 1000);
+		////printf("COUNTER IS %d sleep next   %d\n", time, (400 -  error) * 1000);
+		//printf("%d\n", time);
+		ft_put_nbr(time);
+		i++;
+	}
+	
 	return (0);
 
 }
