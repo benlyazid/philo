@@ -4,26 +4,15 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include "./philo.h"
-int	N_PHILO = 3;
-int T_ERR = 1;
-int	T_DIE = (400) * 1000;
-int	T_EAT = (400) * 1000;
-int	T_SLEEP = (400) * 1000;
-int	N_SIMULATION = 10;
+
+// int	N_PHILO = 4;
+// int	T_DIE = (410) * 1000;
+// int	T_EAT = (200) * 1000;
+// int	T_SLEEP = (200) * 1000;
+// int	N_SIMULATION = 5000;
+
 long START, M_START;
 int ALL_HAS_CRIETED;
-#define RED   "\x1B[31m"
-#define GRN   "\x1B[32m"
-#define YEL   "\x1B[33m"
-#define BLU   "\x1B[34m"
-#define MAG   "\x1B[35m"
-#define CYN   "\x1B[36m"
-#define WHT   "\x1B[37m"
-#define RESET "\x1B[0m"
-# define EATING 1
-# define THNKING 2
-# define SLEEPING 3
-
 
 
 
@@ -37,13 +26,12 @@ int	get_time()
 	return (time);
 }
 
-void	initial_tab(t_philo **tab, int n)
+void	initial_tab(t_philo **tab, int n, t_data data)
 {	
 	int	i;
 	t_philo	philo;
 	p_m_t	**forks;
 	p_m_t	*write_locks;
-
 
 	forks = malloc(sizeof(p_m_t *) * n);
 	write_locks = malloc(sizeof(p_m_t));
@@ -61,7 +49,10 @@ void	initial_tab(t_philo **tab, int n)
 		philo.fork_loks = forks;
 		philo.last_time_eating = 0;
 		philo.simulation = 0;
+		philo.is_eating = malloc(sizeof(p_m_t));
+		pthread_mutex_init(philo.is_eating, NULL);
 		philo.write_lock = write_locks;
+		philo.data = data;
 		tab[0][i] = philo;
 	}
 }
@@ -74,7 +65,7 @@ int		take_fork(t_philo **tab, int index)
 
 	res = 0;
 	if (index == 0)
-		before = N_PHILO - 1;
+		before = tab[0]->data.N_PHILO - 1;
 	else
 		before = index - 1;
 	next = index;
@@ -94,7 +85,7 @@ int		drope_fork(t_philo **tab, int index)
 
 	res = 0;
 	if (index == 0)
-		before = N_PHILO - 1;
+		before = tab[0]->data.N_PHILO - 1;
 	else
 		before = index - 1;
 	next = index;
@@ -107,14 +98,14 @@ void	*update_status(void *element)
 {
 	t_philo	*philo = (t_philo *)element;
 	if (philo->id % 2)
-		usleep(1000);
-	while (philo->simulation < 3)
+		usleep(800);
+	while (1)
 	{
 		if (philo->status == EATING)
 		{	
 			ft_put_status(get_time(), philo->id, "is sleeping", MAG, philo->write_lock);
 			philo->status = SLEEPING;
-			usleep(T_SLEEP);
+			ft_usleep(philo->data.T_SLEEP);
 
 		}
 		if (philo->status == SLEEPING)
@@ -125,14 +116,16 @@ void	*update_status(void *element)
 		if (philo->status == THNKING || philo->status == -1)
 		{
 			take_fork(philo->tab, philo->id - 1);
+			pthread_mutex_lock(philo->is_eating);
+			philo->last_time_eating = get_time();
 			ft_put_status(get_time(), philo->id, "is eating", GRN, philo->write_lock);
 			philo->status = EATING;
-			usleep(T_EAT);
+			ft_usleep(philo->data.T_EAT);
+			pthread_mutex_unlock(philo->is_eating);
 			drope_fork(philo->tab, philo->id - 1);
 			philo->simulation++;
 		}
 	}
-	//exit(1);
 	
 	return (NULL);
 }
@@ -140,33 +133,93 @@ void	*update_status(void *element)
 void	run_philos(t_philo **tab, int n)
 {
 	int	i;
-	t_philo	philo;
+	struct timeval tv;
 	
 	i = -1;
 	while (n > ++i)
 	{
-		p_t *t = malloc(sizeof(p_t));
 		pthread_create(tab[0][i].t_id, NULL, update_status, &tab[0][i]);
 	}
-	struct timeval tv;
 	gettimeofday(&tv, NULL);	
 	START = tv.tv_sec;
 	M_START = tv.tv_usec;
 
 }
 
+int	check_simulation_count(t_philo **tab)
+{
+	int	i;
+
+	i = 0;
+	while (i < tab[0][i].data.N_PHILO)
+	{
+		if (tab[0][i].simulation < tab[0][i].data.N_SIMULATION)
+			return (1);
+		i++;
+	}
+	return (0);
+
+}
+
+void	*start_super_visor(void *elmnts)
+{
+	t_philo	*philos;
+	int	i;
+	philos = (t_philo *)elmnts;
+	while (1)
+	{
+		i = 0;
+		while (i < philos[i].data.N_PHILO)
+		{
+			if (philos[i].status == EATING)
+					continue ;
+			pthread_mutex_lock(philos[i].is_eating);
+			if (get_time() - philos[i].last_time_eating > philos[i].data.T_DIE / 1000)
+			{
+				ft_put_status(get_time(), i + 1, "IS DIED", RED, philos[i].write_lock);
+				exit(0);
+			}
+			pthread_mutex_unlock(philos[i].is_eating);
+			usleep(800);
+			i++;
+		}
+
+	}
+	return (NULL);
+}
+
+t_data	get_data(char **argv, int argc)
+{
+	t_data	data;
+
+	if (argc < 5 || argc > 6)
+		exit(0);
+	data.N_PHILO = ft_atoi(argv[1]);
+	data.T_DIE = ft_atoi(argv[2]);
+	data.T_EAT = ft_atoi(argv[3]);
+	data.T_SLEEP = ft_atoi(argv[4]);
+	data.N_SIMULATION = -1;
+	if (argc == 6)	
+		data.N_SIMULATION = ft_atoi(argv[5]);
+
+	return (data);
+}
+
 int main(int argc, char const *argv[])
 {
 	t_philo	*tab;
+	p_t		*super_visor;
+	t_data data;
 
-	tab = malloc(sizeof(t_philo) * (N_PHILO + 1));
-	initial_tab(&tab, N_PHILO);
-	ALL_HAS_CRIETED = 0;
-	run_philos(&tab, N_PHILO);
+	data =  get_data((char **)argv, argc);
+	tab = malloc(sizeof(t_philo) * (data.N_PHILO));
+	super_visor = malloc(sizeof(p_t));
 
-	while (1)
-	{
-	}
+	initial_tab(&tab, data.N_PHILO, data);
+	run_philos(&tab, data.N_PHILO);
+	pthread_create(super_visor, NULL, start_super_visor, tab);
+	while (check_simulation_count(&tab))
+		usleep(800);
     return 0;
 
 }

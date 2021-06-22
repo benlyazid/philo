@@ -54,6 +54,29 @@ void *check()
 	return NULL;
 }
 
+int	ft_usleep(int delay)
+{
+	struct	timeval tv;
+	int	start, m_start, time, split, i;
+	int	err;
+
+	delay *= 1000;
+	err = 0;
+	split = 100;
+	i = 1;
+	gettimeofday(&tv, NULL);
+	start = tv.tv_sec;
+	m_start = tv.tv_usec;
+	while (i <= split)
+	{
+		usleep((delay / split) - err);
+		gettimeofday(&tv, NULL);
+		time = ((tv.tv_sec - start) * 1000000) + ((tv.tv_usec - m_start)); //time in u_s
+		err = (time) - ((delay / split) * i); //err in u_s
+		i++;
+	}
+	return (1);
+}
 int main()
 {
 	COUNTER = 0;
@@ -66,7 +89,7 @@ int main()
 	int error = 0;
 	while (i <= 10)
 	{
-		usleep((400) * 1000);
+		ft_usleep(400);
 		gettimeofday(&tv, NULL);
 		time = ((tv.tv_sec - START) * 1000) + ((tv.tv_usec - M_START) / 1000);
 		////printf("COUNTER IS %d sleep next   %d\n", time, (400 -  error) * 1000);
@@ -78,3 +101,4 @@ int main()
 	return (0);
 
 }
+//4022 4024
