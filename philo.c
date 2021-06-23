@@ -5,16 +5,7 @@
 #include <sys/time.h>
 #include "./philo.h"
 
-// int	N_PHILO = 4;
-// int	T_DIE = (410) * 1000;
-// int	T_EAT = (200) * 1000;
-// int	T_SLEEP = (200) * 1000;
-// int	N_SIMULATION = 5000;
-
 long START, M_START;
-int ALL_HAS_CRIETED;
-
-
 
 int	get_time()
 {
@@ -151,7 +142,9 @@ int	check_simulation_count(t_philo **tab)
 	int	i;
 
 	i = 0;
-	while (i < tab[0][i].data.N_PHILO)
+	if (tab[0][i].data.N_SIMULATION == -1)
+		return (1);
+	while (i < tab[0][i].data.N_SIMULATION)
 	{
 		if (tab[0][i].simulation < tab[0][i].data.N_SIMULATION)
 			return (1);
@@ -165,25 +158,28 @@ void	*start_super_visor(void *elmnts)
 {
 	t_philo	*philos;
 	int	i;
+	int	rpt;
+
 	philos = (t_philo *)elmnts;
+	rpt = philos[0].data.N_PHILO;
 	while (1)
 	{
 		i = 0;
-		while (i < philos[i].data.N_PHILO)
+		while (i < rpt)
 		{
-			if (philos[i].status == EATING)
-					continue ;
-			pthread_mutex_lock(philos[i].is_eating);
-			if (get_time() - philos[i].last_time_eating > philos[i].data.T_DIE / 1000)
+			if (philos[i].status != EATING)
 			{
-				ft_put_status(get_time(), i + 1, "IS DIED", RED, philos[i].write_lock);
-				exit(0);
+				pthread_mutex_lock(philos[i].is_eating);
+				if (get_time() - philos[i].last_time_eating > philos[i].data.T_DIE / 1000)
+				{
+					ft_put_status(get_time(), i + 1, "IS DIED", RED, philos[i].write_lock);
+					exit(0);
+				}
+				pthread_mutex_unlock(philos[i].is_eating);
 			}
-			pthread_mutex_unlock(philos[i].is_eating);
 			usleep(800);
-			i++;
+			i++;		
 		}
-
 	}
 	return (NULL);
 }
@@ -195,13 +191,12 @@ t_data	get_data(char **argv, int argc)
 	if (argc < 5 || argc > 6)
 		exit(0);
 	data.N_PHILO = ft_atoi(argv[1]);
-	data.T_DIE = ft_atoi(argv[2]);
-	data.T_EAT = ft_atoi(argv[3]);
-	data.T_SLEEP = ft_atoi(argv[4]);
+	data.T_DIE = ft_atoi(argv[2]) * 1000;
+	data.T_EAT = ft_atoi(argv[3]) * 1000;
+	data.T_SLEEP = ft_atoi(argv[4]) * 1000;
 	data.N_SIMULATION = -1;
 	if (argc == 6)	
 		data.N_SIMULATION = ft_atoi(argv[5]);
-
 	return (data);
 }
 
@@ -219,7 +214,9 @@ int main(int argc, char const *argv[])
 	run_philos(&tab, data.N_PHILO);
 	pthread_create(super_visor, NULL, start_super_visor, tab);
 	while (check_simulation_count(&tab))
+	{
 		usleep(800);
+	}
     return 0;
 
 }

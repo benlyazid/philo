@@ -6,7 +6,7 @@
 /*   By: kbenlyaz <kbenlyaz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/06/20 12:27:28 by kbenlyaz          #+#    #+#             */
-/*   Updated: 2021/06/22 13:10:37 by kbenlyaz         ###   ########.fr       */
+/*   Updated: 2021/06/23 12:40:47 by kbenlyaz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,6 @@ int	ft_usleep(int delay)
 	int	start, m_start, time, split, i;
 	int	err;
 
-	//delay *= 1000;
-	//usleep(delay);
-	//return 0;
 	err = 0;
 	split = 10;
 	i = 1;
