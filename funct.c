@@ -6,7 +6,7 @@
 /*   By: kbenlyaz <kbenlyaz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/06/20 12:27:28 by kbenlyaz          #+#    #+#             */
-/*   Updated: 2021/06/23 12:40:47 by kbenlyaz         ###   ########.fr       */
+/*   Updated: 2021/06/24 13:28:06 by kbenlyaz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,27 +15,30 @@
 int	ft_usleep(int delay)
 {
 	struct	timeval tv;
-	int	start, m_start, time, split, i;
+	int	start, m_start, time, split, i, delay_1;
 	int	err;
 
 	err = 0;
 	split = 10;
 	i = 1;
+	delay_1 = delay - 10000;
 	gettimeofday(&tv, NULL);
 	start = tv.tv_sec;
 	m_start = tv.tv_usec;
-	while (i <= split)
+	usleep(delay_1);
+	
+	while (1)
 	{
-		usleep((delay / split) - err);
 		gettimeofday(&tv, NULL);
 		time = ((tv.tv_sec - start) * 1000000) + ((tv.tv_usec - m_start)); //time in u_s
-		err = (time) - ((delay / split) * i); //err in u_s
-		i++;
+		if (time >= delay)
+			return (1);
 	}
 	return (1);
 }
 
-int		ft_atoi(char *str)
+
+int		ft_atoi(char *str, int *check)
 {
 	int		i;
 	long	num;
@@ -47,9 +50,15 @@ int		ft_atoi(char *str)
 		if (str[i] >= '0' && str[i] <= '9')
 			num = (num  * 10) + (str[i] - '0');
 		else
-			exit(0);
+		{
+			*check = -1;	
+			return 0;
+		}
 		if (num > INT32_MAX)
-			exit(0);
+		{
+			*check = -1;	
+			return (0);
+		}
 		i++;
 	}
 	return (num);
@@ -61,7 +70,7 @@ void	ft_put_nbr(int num)
 	char	c;
 
 	base = 10;
-	while (num > base)
+	while (num >= base)
 	{
 		base *= 10;
 	}
@@ -85,16 +94,3 @@ void ft_putstr(char *s)
 	}
 }
 
-void    ft_put_status(int time, int id, char *status, char *clr, p_m_t *write_lock)
-{
-    pthread_mutex_lock(write_lock); 
-    ft_putstr(clr);
-    ft_put_nbr(time);
-    ft_putstr(" ");
-    ft_put_nbr(id);
-    ft_putstr(" ");
-    ft_putstr(status);
-    write(1, "\n", 1);
-    ft_putstr(RESET);
-    pthread_mutex_unlock(write_lock);
-}

@@ -6,7 +6,7 @@
 /*   By: kbenlyaz <kbenlyaz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/06/20 12:27:13 by kbenlyaz          #+#    #+#             */
-/*   Updated: 2021/06/22 15:23:19 by kbenlyaz         ###   ########.fr       */
+/*   Updated: 2021/06/24 13:28:57 by kbenlyaz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ typedef	struct s_data
 	int	T_EAT;
 	int	T_SLEEP;
 	int	N_SIMULATION;
+	int	check;
 }			t_data;
 
 typedef struct	s_philo
@@ -58,12 +59,19 @@ typedef struct	s_philo
     p_m_t           *write_lock;
 	p_m_t			*is_eating;
 	t_data			data;
+	long			START;
+	long			U_START;
 }				t_philo;
 
 void    ft_putstr(char *s);
 void    ft_put_nbr(int num);
-void    ft_put_status(int time, int id, char *status, char *clr, p_m_t *write_lock);
+//void    ft_put_status(int time, int id, char *status, char *clr, p_m_t *write_lock);
 int		ft_usleep(int delay);
-int		ft_atoi(char *str);
-
+int		ft_atoi(char *str, int *check);
+int		get_time(t_philo *tab);
+void    ft_put_died(int time, int id, p_m_t *write_lock);
+void    ft_put_thinking(int time, int id, p_m_t *write_lock);
+void    ft_put_sleeping(int time, int id, p_m_t *write_lock);
+void    ft_put_eating(int time, int id, p_m_t *write_lock);
+void    ft_put_take_fork(int time, int id, p_m_t *write_lock);
 #endif

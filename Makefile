@@ -1,6 +1,6 @@
 NAME = philo
-SRC = philo.c funct.c
-OBJ = philo.o funct.o
+SRC = philo.c funct.c print_functions.c
+OBJ = philo.o funct.o print_functions.o
 
 all : $(NAME)
 
