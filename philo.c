@@ -6,7 +6,7 @@
 /*   By: kbenlyaz <kbenlyaz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/06/24 13:15:24 by kbenlyaz          #+#    #+#             */
-/*   Updated: 2021/06/24 13:39:00 by kbenlyaz         ###   ########.fr       */
+/*   Updated: 2021/06/24 16:13:40 by kbenlyaz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -189,10 +189,10 @@ void	*start_super_visor(void *elmnts)
 				}
 				pthread_mutex_unlock(philos[i].is_eating);
 			}
+			usleep(100);
 		}
 		if (!check_simulation_count(&philos))
 			return (0);
-		usleep(800);
 	}
 	return (NULL);
 }
