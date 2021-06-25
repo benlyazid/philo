@@ -6,7 +6,7 @@
 /*   By: kbenlyaz <kbenlyaz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/06/20 12:27:28 by kbenlyaz          #+#    #+#             */
-/*   Updated: 2021/06/24 13:28:06 by kbenlyaz         ###   ########.fr       */
+/*   Updated: 2021/06/25 11:37:08 by kbenlyaz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,12 +15,8 @@
 int	ft_usleep(int delay)
 {
 	struct	timeval tv;
-	int	start, m_start, time, split, i, delay_1;
-	int	err;
+	int	start, m_start, time, delay_1;
 
-	err = 0;
-	split = 10;
-	i = 1;
 	delay_1 = delay - 10000;
 	gettimeofday(&tv, NULL);
 	start = tv.tv_sec;

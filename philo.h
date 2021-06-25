@@ -6,7 +6,7 @@
 /*   By: kbenlyaz <kbenlyaz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/06/20 12:27:13 by kbenlyaz          #+#    #+#             */
-/*   Updated: 2021/06/24 13:28:57 by kbenlyaz         ###   ########.fr       */
+/*   Updated: 2021/06/25 10:23:50 by kbenlyaz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
+#include <semaphore.h>
 
 #define RED   "\x1B[31m"
 #define GRN   "\x1B[32m"
