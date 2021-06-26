@@ -1,6 +1,6 @@
 NAME = philo
-SRC = philo.c funct.c print_functions.c
-OBJ = philo.o funct.o print_functions.o
+SRC = philo.c funct.c print_functions.c fork.c status.c super_visor.c
+OBJ = philo.o funct.o print_functions.o fork.o status.o super_visor.o
 
 all : $(NAME)
 
@@ -16,3 +16,4 @@ fclean : clean
 re : fclean all
 run : re
 	@./$(NAME)
+.PHONY: clean re fclean

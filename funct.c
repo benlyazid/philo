@@ -6,7 +6,7 @@
 /*   By: kbenlyaz <kbenlyaz@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/06/20 12:27:28 by kbenlyaz          #+#    #+#             */
-/*   Updated: 2021/06/25 11:37:08 by kbenlyaz         ###   ########.fr       */
+/*   Updated: 2021/06/26 09:31:51 by kbenlyaz         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,27 +14,26 @@
 
 int	ft_usleep(int delay)
 {
-	struct	timeval tv;
-	int	start, m_start, time, delay_1;
+	struct timeval	tv;
+	int				start;
+	int				m_start;
+	int				time;
 
-	delay_1 = delay - 10000;
 	gettimeofday(&tv, NULL);
 	start = tv.tv_sec;
 	m_start = tv.tv_usec;
-	usleep(delay_1);
-	
+	usleep(delay - 10000);
 	while (1)
 	{
 		gettimeofday(&tv, NULL);
-		time = ((tv.tv_sec - start) * 1000000) + ((tv.tv_usec - m_start)); //time in u_s
+		time = ((tv.tv_sec - start) * 1000000) + ((tv.tv_usec - m_start));
 		if (time >= delay)
 			return (1);
 	}
 	return (1);
 }
 
-
-int		ft_atoi(char *str, int *check)
+int	ft_atoi(char *str, int *check)
 {
 	int		i;
 	long	num;
@@ -44,15 +43,15 @@ int		ft_atoi(char *str, int *check)
 	while (str[i])
 	{
 		if (str[i] >= '0' && str[i] <= '9')
-			num = (num  * 10) + (str[i] - '0');
+			num = (num * 10) + (str[i] - '0');
 		else
 		{
-			*check = -1;	
-			return 0;
+			*check = -1;
+			return (0);
 		}
 		if (num > INT32_MAX)
 		{
-			*check = -1;	
+			*check = -1;
 			return (0);
 		}
 		i++;
@@ -73,16 +72,18 @@ void	ft_put_nbr(int num)
 	base /= 10;
 	while (base)
 	{
-		c =  (num / base) + '0';
+		c = (num / base) + '0';
 		write(1, &c, 1);
 		num = num % base;
 		base /= 10;
 	}
 }
 
-void ft_putstr(char *s)
+void	ft_putstr(char *s)
 {
-	int i = 0;
+	int	i;
+
+	i = 0;
 	while (s[i])
 	{
 		write(1, &s[i], 1);
@@ -90,3 +91,13 @@ void ft_putstr(char *s)
 	}
 }
 
+int	get_time(t_philo *tab)
+{
+	int				time;
+	struct timeval	tv;
+
+	gettimeofday(&tv, NULL);
+	time = ((tv.tv_sec - tab->START) * 1000);
+	time += ((tv.tv_usec - tab->U_START) / 1000);
+	return (time);
+}
